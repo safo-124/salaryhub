@@ -275,8 +275,8 @@ export default async function TenantDetailPage({
                                                     e.status === "ACTIVE"
                                                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                                                         : e.status === "TERMINATED"
-                                                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                                                 }>{e.status}</Badge>
                                             </td>
                                             <td className="py-2 text-right">{formatGHS(e.basicSalary)}</td>
@@ -317,8 +317,8 @@ export default async function TenantDetailPage({
                                             l.status === "APPROVED"
                                                 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                                                 : l.status === "REJECTED"
-                                                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                                         }>{l.status}</Badge>
                                     </div>
                                 ))}
@@ -354,8 +354,8 @@ export default async function TenantDetailPage({
                                                 o.status === "APPROVED"
                                                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                                                     : o.status === "REJECTED"
-                                                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                                             }>{o.status}</Badge>
                                         </div>
                                     </div>
