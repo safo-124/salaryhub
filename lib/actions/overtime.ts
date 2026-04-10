@@ -130,3 +130,41 @@ export async function rejectOvertimeEntry(id: string) {
     revalidatePath("/overtime");
     return { success: true };
 }
+
+export async function bulkApproveOvertime(ids: string[]) {
+    const { tenantId, userName } = await requireTenantSession();
+    let count = 0;
+    for (const id of ids) {
+        const entry = await prisma.overtimeEntry.findFirst({
+            where: { id, employee: { tenantId }, status: "PENDING" },
+        });
+        if (entry) {
+            await prisma.overtimeEntry.update({
+                where: { id },
+                data: { status: "APPROVED", approvedBy: userName, approvedAt: new Date() },
+            });
+            count++;
+        }
+    }
+    revalidatePath("/overtime");
+    return { success: true, count };
+}
+
+export async function bulkRejectOvertime(ids: string[]) {
+    const { tenantId, userName } = await requireTenantSession();
+    let count = 0;
+    for (const id of ids) {
+        const entry = await prisma.overtimeEntry.findFirst({
+            where: { id, employee: { tenantId }, status: "PENDING" },
+        });
+        if (entry) {
+            await prisma.overtimeEntry.update({
+                where: { id },
+                data: { status: "REJECTED", approvedBy: userName, approvedAt: new Date() },
+            });
+            count++;
+        }
+    }
+    revalidatePath("/overtime");
+    return { success: true, count };
+}

@@ -18,6 +18,8 @@ import {
 import { FileText } from "lucide-react";
 import { getPayslips } from "@/lib/actions/payroll";
 import { PayslipSearch } from "./payslip-search";
+import { ExportButton } from "@/components/export-button";
+import { exportPayslipsCSV } from "@/lib/actions/export";
 
 const statusColors: Record<string, string> = {
     DRAFT: "bg-muted text-muted-foreground",
@@ -57,11 +59,14 @@ export default async function PayslipsPage({
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight">Payslips</h1>
-                <p className="text-muted-foreground">
-                    All generated payslips across payroll runs.
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Payslips</h1>
+                    <p className="text-muted-foreground">
+                        All generated payslips across payroll runs.
+                    </p>
+                </div>
+                <ExportButton exportFn={exportPayslipsCSV} filename="payslips.csv" label="Export" />
             </div>
 
             <PayslipSearch currentQuery={q} currentPeriod={period} periods={periods} />

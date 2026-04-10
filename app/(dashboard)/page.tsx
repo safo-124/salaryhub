@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Users, DollarSign, Clock, CalendarDays, Plus, Play, FileText, ArrowRight } from "lucide-react";
-import { getDashboardStats, getRecentPayrollRuns } from "@/lib/actions/dashboard";
+import { getDashboardStats, getRecentPayrollRuns, getPayrollChartData, getLeaveStats } from "@/lib/actions/dashboard";
+import { PayrollChart, LeaveTypeChart } from "./dashboard-charts";
 
 const statusColors: Record<string, string> = {
     DRAFT: "bg-muted text-muted-foreground",
@@ -32,9 +33,11 @@ function fmtGHS(n: number) {
 }
 
 export default async function DashboardPage() {
-    const [stats, recentRuns] = await Promise.all([
+    const [stats, recentRuns, chartData, leaveStats] = await Promise.all([
         getDashboardStats(),
         getRecentPayrollRuns(),
+        getPayrollChartData(),
+        getLeaveStats(),
     ]);
 
     return (
@@ -136,6 +139,12 @@ export default async function DashboardPage() {
                         <p className="text-xs text-muted-foreground">Browse generated payslips</p>
                     </div>
                 </Button>
+            </div>
+
+            {/* Charts */}
+            <div className="grid gap-6 lg:grid-cols-2">
+                <PayrollChart data={chartData} />
+                <LeaveTypeChart data={leaveStats.byType} />
             </div>
 
             {/* Recent Payroll Runs */}

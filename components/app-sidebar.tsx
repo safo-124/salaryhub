@@ -14,6 +14,8 @@ import {
     Moon,
     CalendarDays,
     Clock,
+    Bell,
+    ClipboardList,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -37,20 +39,44 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { User } from "lucide-react";
 
-const navItems = [
-    { title: "Dashboard", href: "/", icon: LayoutDashboard },
-    { title: "Employees", href: "/employees", icon: Users },
-    { title: "Payroll", href: "/payroll", icon: DollarSign },
-    { title: "Payslips", href: "/payslips", icon: FileText },
-    { title: "Leave", href: "/leave", icon: CalendarDays },
-    { title: "Overtime", href: "/overtime", icon: Clock },
+export type SidebarPermissions = {
+    canManageEmployees: boolean;
+    canRunPayroll: boolean;
+    canApproveLeave: boolean;
+    canApproveOvertime: boolean;
+    canManageSettings: boolean;
+    canExport: boolean;
+    isEmployee: boolean;
+};
+
+const allNavItems = [
+    { title: "Dashboard", href: "/", icon: LayoutDashboard, minRole: null },
+    { title: "My Profile", href: "/profile", icon: User, employeeOnly: true },
+    { title: "Employees", href: "/employees", icon: Users, permission: "canManageEmployees" as const },
+    { title: "Payroll", href: "/payroll", icon: DollarSign, permission: "canRunPayroll" as const },
+    { title: "Payslips", href: "/payslips", icon: FileText, minRole: null },
+    { title: "Leave", href: "/leave", icon: CalendarDays, minRole: null },
+    { title: "Overtime", href: "/overtime", icon: Clock, minRole: null },
+    { title: "Notifications", href: "/notifications", icon: Bell, minRole: null },
+    { title: "Audit Log", href: "/audit", icon: ClipboardList, permission: "canManageEmployees" as const },
 ];
 
-export function AppSidebar() {
+function getVisibleNavItems(permissions?: SidebarPermissions) {
+    if (!permissions) return allNavItems.filter((i) => !i.employeeOnly);
+    return allNavItems.filter((item) => {
+        if (item.employeeOnly) return permissions.isEmployee;
+        if (item.permission) return permissions[item.permission];
+        return true;
+    });
+}
+
+export function AppSidebar({ permissions }: { permissions?: SidebarPermissions }) {
     const pathname = usePathname();
     const { data: session } = useSession();
     const { theme, setTheme } = useTheme();
+    const navItems = getVisibleNavItems(permissions);
 
     return (
         <Sidebar collapsible="icon">
@@ -145,10 +171,18 @@ export function AppSidebar() {
                                     )}
                                     {theme === "dark" ? "Light mode" : "Dark mode"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem render={<Link href="/settings" />}>
-                                    <Settings className="mr-2 size-4" />
-                                    Settings
-                                </DropdownMenuItem>
+                                {(!permissions || permissions.canManageSettings) && (
+                                    <DropdownMenuItem render={<Link href="/settings" />}>
+                                        <Settings className="mr-2 size-4" />
+                                        Settings
+                                    </DropdownMenuItem>
+                                )}
+                                {permissions?.isEmployee && (
+                                    <DropdownMenuItem render={<Link href="/profile" />}>
+                                        <User className="mr-2 size-4" />
+                                        My Profile
+                                    </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login" })}
                                 >

@@ -19,6 +19,10 @@ import {
 import { Plus, Users, Search } from "lucide-react";
 import { getEmployees } from "@/lib/actions/employees";
 import { EmployeeSearch } from "./employee-search";
+import { ExportButton } from "@/components/export-button";
+import { exportEmployeesCSV } from "@/lib/actions/export";
+import { EmployeeViewToggle } from "./employee-view-toggle";
+import { StatusToggle } from "./status-toggle";
 
 const roleColors: Record<string, string> = {
     OWNER: "bg-primary/10 text-primary",
@@ -68,10 +72,13 @@ export default async function EmployeesPage({
                         Manage your team members and their details.
                     </p>
                 </div>
-                <Button render={<Link href="/employees/new" />}>
-                    <Plus className="mr-2 size-4" />
-                    Add Employee
-                </Button>
+                <div className="flex gap-2">
+                    <ExportButton exportFn={exportEmployeesCSV} filename="employees.csv" label="Export" />
+                    <Button render={<Link href="/employees/new" />}>
+                        <Plus className="mr-2 size-4" />
+                        Add Employee
+                    </Button>
+                </div>
             </div>
 
             <EmployeeSearch currentQuery={q} currentStatus={status} />
@@ -111,58 +118,64 @@ export default async function EmployeesPage({
                             )}
                         </div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Department</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Basic Salary</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {employees.map((emp) => (
-                                    <TableRow key={emp.id}>
-                                        <TableCell className="font-mono text-sm">
-                                            {emp.employeeId}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Link
-                                                href={`/employees/${emp.id}`}
-                                                className="font-medium hover:underline"
-                                            >
-                                                {emp.firstName} {emp.lastName}
-                                            </Link>
-                                            <div className="text-xs text-muted-foreground">
-                                                {emp.email}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{emp.department || "—"}</TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="secondary"
-                                                className={roleColors[emp.role] || ""}
-                                            >
-                                                {emp.role.replace("_", " ")}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="secondary"
-                                                className={statusColors[emp.status] || ""}
-                                            >
-                                                {emp.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums">
-                                            GHS {emp.basicSalary.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
-                                        </TableCell>
+                        <EmployeeViewToggle employees={employees}>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>ID</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Department</TableHead>
+                                        <TableHead>Role</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Basic Salary</TableHead>
+                                        <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {employees.map((emp) => (
+                                        <TableRow key={emp.id}>
+                                            <TableCell className="font-mono text-sm">
+                                                {emp.employeeId}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Link
+                                                    href={`/employees/${emp.id}`}
+                                                    className="font-medium hover:underline"
+                                                >
+                                                    {emp.firstName} {emp.lastName}
+                                                </Link>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {emp.email}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{emp.department || "—"}</TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="secondary"
+                                                    className={roleColors[emp.role] || ""}
+                                                >
+                                                    {emp.role.replace("_", " ")}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="secondary"
+                                                    className={statusColors[emp.status] || ""}
+                                                >
+                                                    {emp.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right tabular-nums">
+                                                GHS {emp.basicSalary.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusToggle id={emp.id} currentStatus={emp.status} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </EmployeeViewToggle>
                     )}
                 </CardContent>
             </Card>

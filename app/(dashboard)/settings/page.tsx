@@ -9,6 +9,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { getTenantSettings } from "@/lib/actions/settings";
 import { SettingsForm } from "./settings-form";
+import { getDepartments } from "@/lib/actions/departments";
+import { getEmployees } from "@/lib/actions/employees";
+import { DepartmentManager } from "./departments";
+import { getSalaryStructures } from "@/lib/actions/salary-structures";
+import { SalaryStructureManager } from "./salary-structures";
 
 const planColors: Record<string, string> = {
     STARTER: "bg-muted text-muted-foreground",
@@ -17,7 +22,12 @@ const planColors: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-    const settings = await getTenantSettings();
+    const [settings, departments, employees, salaryStructures] = await Promise.all([
+        getTenantSettings(),
+        getDepartments(),
+        getEmployees(),
+        getSalaryStructures(),
+    ]);
 
     return (
         <div className="space-y-6">
@@ -75,6 +85,10 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <DepartmentManager departments={departments} employees={employees} />
+
+            <SalaryStructureManager structures={salaryStructures} />
         </div>
     );
 }

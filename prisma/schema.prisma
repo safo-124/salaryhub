@@ -81,6 +81,20 @@ enum AnnouncementType {
   FEATURE
 }
 
+enum NotificationType {
+  LEAVE_REQUEST
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  OVERTIME_SUBMITTED
+  OVERTIME_APPROVED
+  OVERTIME_REJECTED
+  PAYROLL_READY
+  PAYROLL_APPROVED
+  PAYROLL_PAID
+  EMPLOYEE_ONBOARDED
+  GENERAL
+}
+
 // ─── Models ──────────────────────────────────────────────
 
 model Admin {
@@ -115,6 +129,8 @@ model Tenant {
   salaryStructures SalaryStructure[]
   invoices         Invoice[]
   features         TenantFeature[]
+  departments      Department[]
+  notifications    Notification[]
 
   @@index([status])
   @@index([deletedAt])
@@ -145,6 +161,17 @@ model Employee {
   supervisorId  String?
   supervisor    Employee?      @relation("Supervision", fields: [supervisorId], references: [id])
   subordinates  Employee[]     @relation("Supervision")
+
+  departmentId  String?
+  departmentRel Department?    @relation(fields: [departmentId], references: [id])
+
+  // Onboarding checklist
+  onboardBankDetails   Boolean @default(false)
+  onboardSsnit         Boolean @default(false)
+  onboardTin           Boolean @default(false)
+  onboardContract      Boolean @default(false)
+  onboardIdDocument    Boolean @default(false)
+  onboardEmergContact  Boolean @default(false)
 
   payslips        Payslip[]
   overtimeEntries OvertimeEntry[]
@@ -317,4 +344,33 @@ model TenantFeature {
 
   @@unique([tenantId, feature])
   @@index([tenantId])
+}
+
+model Department {
+  id        String     @id @default(cuid())
+  tenantId  String
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  name      String
+  headId    String?    // employee who heads this department
+  createdAt DateTime   @default(now())
+  employees Employee[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  tenantId   String
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+  type       NotificationType
+  title      String
+  message    String
+  linkUrl    String?
+  isRead     Boolean          @default(false)
+  recipientId String?         // specific employee, or null = all admins
+  createdAt  DateTime         @default(now())
+
+  @@index([tenantId, isRead])
+  @@index([recipientId])
 }

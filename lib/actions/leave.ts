@@ -104,3 +104,41 @@ export async function rejectLeaveRequest(id: string) {
     revalidatePath("/leave");
     return { success: true };
 }
+
+export async function bulkApproveLeave(ids: string[]) {
+    const { tenantId, userName } = await requireTenantSession();
+    let count = 0;
+    for (const id of ids) {
+        const req = await prisma.leaveRequest.findFirst({
+            where: { id, employee: { tenantId }, status: "PENDING" },
+        });
+        if (req) {
+            await prisma.leaveRequest.update({
+                where: { id },
+                data: { status: "APPROVED", approvedBy: userName, approvedAt: new Date() },
+            });
+            count++;
+        }
+    }
+    revalidatePath("/leave");
+    return { success: true, count };
+}
+
+export async function bulkRejectLeave(ids: string[]) {
+    const { tenantId, userName } = await requireTenantSession();
+    let count = 0;
+    for (const id of ids) {
+        const req = await prisma.leaveRequest.findFirst({
+            where: { id, employee: { tenantId }, status: "PENDING" },
+        });
+        if (req) {
+            await prisma.leaveRequest.update({
+                where: { id },
+                data: { status: "REJECTED", approvedBy: userName, approvedAt: new Date() },
+            });
+            count++;
+        }
+    }
+    revalidatePath("/leave");
+    return { success: true, count };
+}

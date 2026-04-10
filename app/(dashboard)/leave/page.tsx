@@ -6,18 +6,13 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { getLeaveRequests } from "@/lib/actions/leave";
 import { getEmployees } from "@/lib/actions/employees";
-import { LeaveActions } from "./leave-actions";
 import { NewLeaveForm } from "./new-leave-form";
+import { LeaveTable } from "./leave-table";
+import { LeaveCalendar } from "./leave-calendar";
+import { ExportButton } from "@/components/export-button";
+import { exportLeaveCSV } from "@/lib/actions/export";
 
 const statusColors: Record<string, string> = {
     PENDING: "bg-warning/10 text-warning",
@@ -52,8 +47,13 @@ export default async function LeavePage() {
                         Track and manage employee leave requests.
                     </p>
                 </div>
-                <NewLeaveForm employees={activeEmployees} />
+                <div className="flex gap-2">
+                    <ExportButton exportFn={exportLeaveCSV} filename="leave-requests.csv" label="Export" />
+                    <NewLeaveForm employees={activeEmployees} />
+                </div>
             </div>
+
+            {requests.length > 0 && <LeaveCalendar requests={requests} />}
 
             <Card>
                 <CardHeader>
@@ -70,53 +70,7 @@ export default async function LeavePage() {
                             No leave requests submitted yet.
                         </p>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Employee</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>From</TableHead>
-                                    <TableHead>To</TableHead>
-                                    <TableHead>Days</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {requests.map((req) => (
-                                    <TableRow key={req.id}>
-                                        <TableCell>
-                                            <div className="font-medium">{req.employeeName}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {req.employeeCode}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="secondary"
-                                                className={typeColors[req.type] || ""}
-                                            >
-                                                {req.type}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{req.startDate}</TableCell>
-                                        <TableCell>{req.endDate}</TableCell>
-                                        <TableCell>{req.days}</TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="secondary"
-                                                className={statusColors[req.status] || ""}
-                                            >
-                                                {req.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <LeaveActions id={req.id} status={req.status} />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <LeaveTable requests={requests} />
                     )}
                 </CardContent>
             </Card>

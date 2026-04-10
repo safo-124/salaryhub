@@ -190,3 +190,43 @@ export async function updateEmployeeStatus(id: string, status: EmployeeStatus) {
     revalidatePath(`/employees/${id}`);
     return { success: true };
 }
+
+export async function getEmployeeOnboarding(id: string) {
+    const { tenantId } = await requireTenantSession();
+    const e = await prisma.employee.findFirst({
+        where: { id, tenantId },
+        select: {
+            id: true,
+            onboardBankDetails: true,
+            onboardSsnit: true,
+            onboardTin: true,
+            onboardContract: true,
+            onboardIdDocument: true,
+            onboardEmergContact: true,
+        },
+    });
+    return e;
+}
+
+export async function updateOnboardingItem(id: string, field: string, value: boolean) {
+    const { tenantId } = await requireTenantSession();
+    const existing = await prisma.employee.findFirst({ where: { id, tenantId } });
+    if (!existing) return { success: false, error: "Employee not found" };
+
+    const validFields = [
+        "onboardBankDetails",
+        "onboardSsnit",
+        "onboardTin",
+        "onboardContract",
+        "onboardIdDocument",
+        "onboardEmergContact",
+    ];
+    if (!validFields.includes(field)) return { success: false, error: "Invalid field" };
+
+    await prisma.employee.update({
+        where: { id },
+        data: { [field]: value },
+    });
+    revalidatePath(`/employees/${id}`);
+    return { success: true };
+}

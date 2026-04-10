@@ -64,3 +64,43 @@ export async function getRecentPayrollRuns() {
         processedAt: r.processedAt?.toISOString() ?? null,
     }));
 }
+
+export async function getPayrollChartData() {
+    const { tenantId } = await requireTenantSession();
+
+    const runs = await prisma.payrollRun.findMany({
+        where: { tenantId },
+        orderBy: { period: "asc" },
+        take: 12,
+        select: { period: true, totalGross: true, totalNet: true, totalTax: true, employeeCount: true },
+    });
+
+    return runs.map((r) => ({
+        period: r.period,
+        gross: Number(r.totalGross),
+        net: Number(r.totalNet),
+        tax: Number(r.totalTax),
+        employees: r.employeeCount,
+    }));
+}
+
+export async function getLeaveStats() {
+    const { tenantId } = await requireTenantSession();
+
+    const requests = await prisma.leaveRequest.findMany({
+        where: { employee: { tenantId } },
+        select: { type: true, status: true },
+    });
+
+    const byType: Record<string, number> = {};
+    const byStatus: Record<string, number> = {};
+    for (const r of requests) {
+        byType[r.type] = (byType[r.type] || 0) + 1;
+        byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+    }
+
+    return {
+        byType: Object.entries(byType).map(([name, value]) => ({ name, value })),
+        byStatus: Object.entries(byStatus).map(([name, value]) => ({ name, value })),
+    };
+}

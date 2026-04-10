@@ -16,7 +16,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Play } from "lucide-react";
+import { Play, ArrowLeftRight } from "lucide-react";
 import { getPayrollRuns } from "@/lib/actions/payroll";
 
 const statusColors: Record<string, string> = {
@@ -39,10 +39,16 @@ export default async function PayrollPage() {
                         Run and manage monthly payroll.
                     </p>
                 </div>
-                <Button render={<Link href="/payroll/run" />}>
-                    <Play className="mr-2 size-4" />
-                    Run Payroll
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" render={<Link href="/payroll/compare" />}>
+                        <ArrowLeftRight className="mr-2 size-4" />
+                        Compare
+                    </Button>
+                    <Button render={<Link href="/payroll/run" />}>
+                        <Play className="mr-2 size-4" />
+                        Run Payroll
+                    </Button>
+                </div>
             </div>
 
             <Card>

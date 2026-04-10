@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { getEmployee } from "@/lib/actions/employees";
+import { getEmployee, getEmployeeOnboarding } from "@/lib/actions/employees";
+import { OnboardingChecklist } from "./onboarding-checklist";
 
 export default async function EmployeeDetailPage({
     params,
@@ -19,7 +20,10 @@ export default async function EmployeeDetailPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const employee = await getEmployee(id);
+    const [employee, onboarding] = await Promise.all([
+        getEmployee(id),
+        getEmployeeOnboarding(id),
+    ]);
 
     if (!employee) notFound();
 
@@ -98,6 +102,8 @@ export default async function EmployeeDetailPage({
                     </CardContent>
                 </Card>
             </div>
+
+            {onboarding && <OnboardingChecklist onboarding={onboarding} />}
         </div>
     );
 }
