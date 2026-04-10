@@ -15,7 +15,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { FileText } from "lucide-react";
 import { getPayslips } from "@/lib/actions/payroll";
+import { PayslipSearch } from "./payslip-search";
 
 const statusColors: Record<string, string> = {
     DRAFT: "bg-muted text-muted-foreground",
@@ -29,8 +31,29 @@ function fmtGHS(n: number) {
     return `GHS ${n.toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
 }
 
-export default async function PayslipsPage() {
-    const payslips = await getPayslips();
+export default async function PayslipsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ q?: string; period?: string }>;
+}) {
+    const { q, period } = await searchParams;
+    const allPayslips = await getPayslips();
+
+    let payslips = allPayslips;
+    if (q) {
+        const query = q.toLowerCase();
+        payslips = payslips.filter(
+            (p) =>
+                p.employeeName.toLowerCase().includes(query) ||
+                p.employeeCode.toLowerCase().includes(query)
+        );
+    }
+    if (period) {
+        payslips = payslips.filter((p) => p.period === period);
+    }
+
+    // Get unique periods for filter
+    const periods = [...new Set(allPayslips.map((p) => p.period))].sort().reverse();
 
     return (
         <div className="space-y-6">
@@ -41,20 +64,42 @@ export default async function PayslipsPage() {
                 </p>
             </div>
 
+            <PayslipSearch currentQuery={q} currentPeriod={period} periods={periods} />
+
             <Card>
                 <CardHeader>
-                    <CardTitle>All Payslips</CardTitle>
+                    <CardTitle>
+                        {q || period ? "Filtered Payslips" : "All Payslips"}
+                    </CardTitle>
                     <CardDescription>
                         {payslips.length === 0
-                            ? "No payslips yet. Run payroll to generate payslips."
-                            : `${payslips.length} payslip${payslips.length !== 1 ? "s" : ""} total.`}
+                            ? "No payslips found."
+                            : `${payslips.length} payslip${payslips.length !== 1 ? "s" : ""} ${q || period ? "found" : "total"}.`}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {payslips.length === 0 ? (
-                        <p className="py-8 text-center text-muted-foreground">
-                            No payslips generated yet.
-                        </p>
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <FileText className="mb-4 size-12 text-muted-foreground/50" />
+                            {q || period ? (
+                                <>
+                                    <h3 className="text-lg font-medium">No payslips match your search</h3>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Try adjusting your search or period filter.
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <h3 className="text-lg font-medium">No payslips yet</h3>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Run payroll to generate payslips for your employees.
+                                    </p>
+                                    <Link href="/payroll/run" className="mt-4 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                                        Run Payroll
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     ) : (
                         <Table>
                             <TableHeader>

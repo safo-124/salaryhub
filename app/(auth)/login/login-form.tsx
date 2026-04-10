@@ -107,16 +107,6 @@ export default function LoginForm({
                     <Button type="submit" className="w-full" disabled={isPending}>
                         {isPending ? "Signing in..." : "Sign in"}
                     </Button>
-                    {!tenantName && (
-                        <>
-                            <p className="text-center text-xs text-muted-foreground">
-                                Demo: kwame@acmecorp.com / admin123
-                            </p>
-                            <p className="text-center text-xs text-muted-foreground">
-                                Super Admin: super@salaryhub.com / super123
-                            </p>
-                        </>
-                    )}
                 </form>
             </CardContent>
         </Card>

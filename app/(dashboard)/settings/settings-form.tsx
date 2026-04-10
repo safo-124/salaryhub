@@ -6,18 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateTenantSettings } from "@/lib/actions/settings";
+import { toast } from "sonner";
 
 export function SettingsForm({ billingEmail }: { billingEmail: string }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [saved, setSaved] = useState(false);
 
     async function handleSubmit(formData: FormData) {
         setLoading(true);
-        setSaved(false);
         await updateTenantSettings(formData);
         setLoading(false);
-        setSaved(true);
+        toast.success("Settings saved");
         router.refresh();
     }
 
@@ -37,9 +36,6 @@ export function SettingsForm({ billingEmail }: { billingEmail: string }) {
                 <Button type="submit" disabled={loading}>
                     {loading ? "Saving..." : "Save"}
                 </Button>
-                {saved && (
-                    <span className="text-sm text-green-600">Saved!</span>
-                )}
             </div>
         </form>
     );

@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default function DashboardLayout({
     children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
                         <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                             <SidebarTrigger className="-ml-1" />
                             <Separator orientation="vertical" className="mr-2 h-4" />
+                            <Breadcrumbs />
                         </header>
                         <main className="flex-1 p-6">{children}</main>
                         <ImpersonationBanner />

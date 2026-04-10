@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import { approveOvertimeEntry, rejectOvertimeEntry } from "@/lib/actions/overtime";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function OvertimeActions({
     id,
@@ -21,6 +22,7 @@ export function OvertimeActions({
     async function handleApprove() {
         setLoading(true);
         await approveOvertimeEntry(id);
+        toast.success("Overtime entry approved");
         setLoading(false);
         router.refresh();
     }
@@ -28,6 +30,7 @@ export function OvertimeActions({
     async function handleReject() {
         setLoading(true);
         await rejectOvertimeEntry(id);
+        toast.success("Overtime entry rejected");
         setLoading(false);
         router.refresh();
     }

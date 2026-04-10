@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
     Select,
     SelectContent,
@@ -48,9 +49,11 @@ export default function EditEmployeePage({
     ): Promise<FormState> {
         const result = await updateEmployee(id, formData);
         if (result.success) {
+            toast.success("Employee updated successfully");
             router.push(`/employees/${id}`);
             return { success: true };
         }
+        toast.error(result.error || "Failed to update employee");
         return { error: result.error || "Failed to update employee" };
     }
 

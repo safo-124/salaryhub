@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { createOvertimeEntry } from "@/lib/actions/overtime";
+import { toast } from "sonner";
 
 export function NewOvertimeForm({
     employees,
@@ -36,12 +37,23 @@ export function NewOvertimeForm({
     async function handleSubmit(formData: FormData) {
         setLoading(true);
         setError(null);
+
+        const clockIn = formData.get("clockIn") as string;
+        const clockOut = formData.get("clockOut") as string;
+        if (clockIn && clockOut && clockOut <= clockIn) {
+            setLoading(false);
+            setError("Clock out must be after clock in");
+            return;
+        }
+
         const result = await createOvertimeEntry(formData);
         setLoading(false);
         if (result.success) {
+            toast.success("Overtime logged successfully");
             setOpen(false);
             router.refresh();
         } else {
+            toast.error(result.error || "Failed to log overtime");
             setError(result.error || "Failed to log overtime");
         }
     }

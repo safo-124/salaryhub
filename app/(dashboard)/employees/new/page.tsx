@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
     Select,
     SelectContent,
@@ -34,10 +35,11 @@ export default function NewEmployeePage() {
     ): Promise<FormState> {
         const result = await createEmployee(formData);
         if (result.success) {
+            toast.success("Employee created successfully");
             router.push("/employees");
             return { success: true };
         }
-        return { error: "Failed to create employee" };
+        return { error: result.error || "Failed to create employee" };
     }
 
     const [state, formAction, isPending] = useActionState(

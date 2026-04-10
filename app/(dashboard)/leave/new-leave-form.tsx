@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { createLeaveRequest } from "@/lib/actions/leave";
+import { toast } from "sonner";
 
 export function NewLeaveForm({
     employees,
@@ -36,12 +37,23 @@ export function NewLeaveForm({
     async function handleSubmit(formData: FormData) {
         setLoading(true);
         setError(null);
+
+        const startDate = formData.get("startDate") as string;
+        const endDate = formData.get("endDate") as string;
+        if (startDate && endDate && endDate < startDate) {
+            setLoading(false);
+            setError("End date must be on or after start date");
+            return;
+        }
+
         const result = await createLeaveRequest(formData);
         setLoading(false);
         if (result.success) {
+            toast.success("Leave request submitted");
             setOpen(false);
             router.refresh();
         } else {
+            toast.error(result.error || "Failed to create leave request");
             setError(result.error || "Failed to create leave request");
         }
     }

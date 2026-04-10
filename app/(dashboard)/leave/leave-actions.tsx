@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import { approveLeaveRequest, rejectLeaveRequest } from "@/lib/actions/leave";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function LeaveActions({
     id,
@@ -21,6 +22,7 @@ export function LeaveActions({
     async function handleApprove() {
         setLoading(true);
         await approveLeaveRequest(id);
+        toast.success("Leave request approved");
         setLoading(false);
         router.refresh();
     }
@@ -28,6 +30,7 @@ export function LeaveActions({
     async function handleReject() {
         setLoading(true);
         await rejectLeaveRequest(id);
+        toast.success("Leave request rejected");
         setLoading(false);
         router.refresh();
     }

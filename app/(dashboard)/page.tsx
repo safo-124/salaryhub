@@ -14,7 +14,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Users, DollarSign, Clock, CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Users, DollarSign, Clock, CalendarDays, Plus, Play, FileText, ArrowRight } from "lucide-react";
 import { getDashboardStats, getRecentPayrollRuns } from "@/lib/actions/dashboard";
 
 const statusColors: Record<string, string> = {
@@ -104,6 +106,38 @@ export default async function DashboardPage() {
                 </Card>
             </div>
 
+            {/* Quick Actions */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Button variant="outline" className="h-auto justify-start gap-3 p-4" render={<Link href="/payroll/run" />}>
+                    <Play className="size-5 text-primary" />
+                    <div className="text-left">
+                        <p className="font-medium">Run Payroll</p>
+                        <p className="text-xs text-muted-foreground">Process monthly salaries</p>
+                    </div>
+                </Button>
+                <Button variant="outline" className="h-auto justify-start gap-3 p-4" render={<Link href="/employees/new" />}>
+                    <Plus className="size-5 text-primary" />
+                    <div className="text-left">
+                        <p className="font-medium">Add Employee</p>
+                        <p className="text-xs text-muted-foreground">Onboard a new team member</p>
+                    </div>
+                </Button>
+                <Button variant="outline" className="h-auto justify-start gap-3 p-4" render={<Link href="/leave" />}>
+                    <CalendarDays className="size-5 text-primary" />
+                    <div className="text-left">
+                        <p className="font-medium">Leave Requests</p>
+                        <p className="text-xs text-muted-foreground">Review pending requests</p>
+                    </div>
+                </Button>
+                <Button variant="outline" className="h-auto justify-start gap-3 p-4" render={<Link href="/payslips" />}>
+                    <FileText className="size-5 text-primary" />
+                    <div className="text-left">
+                        <p className="font-medium">View Payslips</p>
+                        <p className="text-xs text-muted-foreground">Browse generated payslips</p>
+                    </div>
+                </Button>
+            </div>
+
             {/* Recent Payroll Runs */}
             <Card>
                 <CardHeader>
@@ -131,7 +165,11 @@ export default async function DashboardPage() {
                             <TableBody>
                                 {recentRuns.map((run) => (
                                     <TableRow key={run.id}>
-                                        <TableCell className="font-medium">{run.period}</TableCell>
+                                        <TableCell>
+                                            <Link href={`/payroll/${run.id}`} className="font-medium hover:underline">
+                                                {run.period}
+                                            </Link>
+                                        </TableCell>
                                         <TableCell>
                                             <Badge
                                                 variant="secondary"
