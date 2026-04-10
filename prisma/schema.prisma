@@ -1,0 +1,320 @@
+// SalaryHub — Prisma Schema
+// Ghana-focused MVP payroll platform
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Plan {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  SUPPORT
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum Role {
+  EMPLOYEE
+  SUPERVISOR
+  HR_MANAGER
+  PAYROLL_ADMIN
+  OWNER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum PayrollStatus {
+  DRAFT
+  PROCESSING
+  PENDING_APPROVAL
+  APPROVED
+  PAID
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  MATERNITY
+  PATERNITY
+  UNPAID
+  COMPASSIONATE
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  MAINTENANCE
+  FEATURE
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(SUPER_ADMIN)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Tenant {
+  id           String       @id @default(cuid())
+  name         String
+  slug         String       @unique
+  country      String       @default("GH")
+  plan         Plan         @default(STARTER)
+  status       TenantStatus @default(ACTIVE)
+  maxEmployees Int          @default(25)
+  trialEndsAt  DateTime?
+  billingEmail String?
+  discount     Decimal      @db.Decimal(5, 2) @default(0)
+  credits      Decimal      @db.Decimal(12, 2) @default(0)
+  deletedAt    DateTime?    // soft delete
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  employees        Employee[]
+  payrollRuns      PayrollRun[]
+  salaryStructures SalaryStructure[]
+  invoices         Invoice[]
+  features         TenantFeature[]
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  employeeId    String         // e.g., SH-0001
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  department    String?
+  jobTitle      String?
+  role          Role           @default(EMPLOYEE)
+  basicSalary   Decimal        @db.Decimal(12, 2)
+  allowances    Decimal        @db.Decimal(12, 2) @default(0)
+  bankName      String?
+  bankAccount   String?
+  ssnit         String?        // Ghana SSNIT number
+  tin           String?        // Tax ID
+  startDate     DateTime
+  status        EmployeeStatus @default(ACTIVE)
+  passwordHash  String?        // for web/API login
+
+  supervisorId  String?
+  supervisor    Employee?      @relation("Supervision", fields: [supervisorId], references: [id])
+  subordinates  Employee[]     @relation("Supervision")
+
+  payslips        Payslip[]
+  overtimeEntries OvertimeEntry[]
+  leaveRequests   LeaveRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, employeeId])
+  @@unique([tenantId, email])
+  @@index([tenantId, status])
+}
+
+model PayrollRun {
+  id            String        @id @default(cuid())
+  tenantId      String
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  period        String        // e.g., "2026-04"
+  status        PayrollStatus @default(DRAFT)
+  totalGross    Decimal       @db.Decimal(14, 2) @default(0)
+  totalNet      Decimal       @db.Decimal(14, 2) @default(0)
+  totalTax      Decimal       @db.Decimal(14, 2) @default(0)
+  employeeCount Int           @default(0)
+  processedBy   String?
+  processedAt   DateTime?
+  approvedBy    String?
+  approvedAt    DateTime?
+  payslips      Payslip[]
+  createdAt     DateTime      @default(now())
+
+  @@unique([tenantId, period])
+  @@index([tenantId, status])
+}
+
+model Payslip {
+  id              String     @id @default(cuid())
+  payrollRunId    String
+  payrollRun      PayrollRun @relation(fields: [payrollRunId], references: [id])
+  employeeId      String
+  employee        Employee   @relation(fields: [employeeId], references: [id])
+  period          String
+  basicSalary     Decimal    @db.Decimal(12, 2)
+  allowances      Decimal    @db.Decimal(12, 2) @default(0)
+  overtime        Decimal    @db.Decimal(12, 2) @default(0)
+  grossPay        Decimal    @db.Decimal(12, 2)
+  ssnitEmployee   Decimal    @db.Decimal(12, 2)  // 5.5%
+  ssnitEmployer   Decimal    @db.Decimal(12, 2)  // 13%
+  tier2           Decimal    @db.Decimal(12, 2)  // 5%
+  paye            Decimal    @db.Decimal(12, 2)  // income tax
+  otherDeductions Decimal    @db.Decimal(12, 2) @default(0)
+  netPay          Decimal    @db.Decimal(12, 2)
+  createdAt       DateTime   @default(now())
+
+  @@index([employeeId, period])
+  @@index([payrollRunId])
+}
+
+model SalaryStructure {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  name       String
+  components Json     // Array of { name, type: "earning"|"deduction", calcType: "fixed"|"percentage", value }
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model OvertimeEntry {
+  id            String         @id @default(cuid())
+  employeeId    String
+  employee      Employee       @relation(fields: [employeeId], references: [id])
+  date          DateTime
+  clockIn       DateTime
+  clockOut      DateTime
+  breakMinutes  Int            @default(0)
+  totalHours    Decimal        @db.Decimal(5, 2)
+  overtimeHours Decimal        @db.Decimal(5, 2)
+  rate          Decimal        @db.Decimal(5, 2)  // 1.5x, 2.0x, etc.
+  amount        Decimal        @db.Decimal(12, 2)
+  status        ApprovalStatus @default(PENDING)
+  photoUrl      String?
+  latitude      Float?
+  longitude     Float?
+  notes         String?
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime       @default(now())
+
+  @@index([employeeId, status])
+}
+
+model LeaveRequest {
+  id         String         @id @default(cuid())
+  employeeId String
+  employee   Employee       @relation(fields: [employeeId], references: [id])
+  type       LeaveType
+  startDate  DateTime
+  endDate    DateTime
+  days       Int
+  reason     String?
+  status     ApprovalStatus @default(PENDING)
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([employeeId, status])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // e.g., "TENANT_CREATED", "TENANT_SUSPENDED", "PLAN_CHANGED"
+  target    String   // description of what was affected
+  targetId  String?  // ID of the affected entity
+  actorId   String   // Admin ID who performed the action
+  actorName String   // Admin name for display
+  metadata  Json?    // extra details (old/new values, etc.)
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String
+  content   String
+  type      AnnouncementType @default(INFO)
+  isActive  Boolean          @default(true)
+  createdBy String
+  expiresAt DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([isActive])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  amount      Decimal       @db.Decimal(12, 2)
+  currency    String        @default("GHS")
+  status      InvoiceStatus @default(PENDING)
+  period      String        // e.g., "2026-04"
+  dueDate     DateTime
+  paidAt      DateTime?
+  description String?
+  createdAt   DateTime      @default(now())
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model TenantFeature {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  feature   String   // e.g., "mobile_app", "api_access", "custom_reports"
+  enabled   Boolean  @default(false)
+  enabledAt DateTime?
+  enabledBy String?  // admin who enabled it
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, feature])
+  @@index([tenantId])
+}
