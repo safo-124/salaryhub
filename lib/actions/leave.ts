@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireTenantSession } from "./tenant-session";
 import { LeaveType, ApprovalStatus } from "@/lib/generated/prisma/client";
+import { addPendingLeave, deductLeaveBalance, removePendingLeave } from "./leave-balances";
 
 export async function getLeaveRequests() {
     const { tenantId } = await requireTenantSession();
@@ -55,6 +56,10 @@ export async function createLeaveRequest(formData: FormData) {
         data: { employeeId, type, startDate, endDate, days, reason },
     });
 
+    // Track pending in leave balance
+    const year = startDate.getFullYear();
+    await addPendingLeave(employeeId, type, days, year);
+
     revalidatePath("/leave");
     return { success: true };
 }
@@ -77,6 +82,10 @@ export async function approveLeaveRequest(id: string) {
             approvedAt: new Date(),
         },
     });
+
+    // Deduct from leave balance (moves pending → used)
+    const year = request.startDate.getFullYear();
+    await deductLeaveBalance(request.employeeId, request.type, request.days, year);
 
     revalidatePath("/leave");
     return { success: true };
@@ -101,6 +110,10 @@ export async function rejectLeaveRequest(id: string) {
         },
     });
 
+    // Remove from pending balance
+    const year = request.startDate.getFullYear();
+    await removePendingLeave(request.employeeId, request.type, request.days, year);
+
     revalidatePath("/leave");
     return { success: true };
 }
@@ -117,6 +130,7 @@ export async function bulkApproveLeave(ids: string[]) {
                 where: { id },
                 data: { status: "APPROVED", approvedBy: userName, approvedAt: new Date() },
             });
+            await deductLeaveBalance(req.employeeId, req.type, req.days, req.startDate.getFullYear());
             count++;
         }
     }
@@ -136,6 +150,7 @@ export async function bulkRejectLeave(ids: string[]) {
                 where: { id },
                 data: { status: "REJECTED", approvedBy: userName, approvedAt: new Date() },
             });
+            await removePendingLeave(req.employeeId, req.type, req.days, req.startDate.getFullYear());
             count++;
         }
     }

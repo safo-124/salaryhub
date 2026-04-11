@@ -173,9 +173,13 @@ model Employee {
   onboardIdDocument    Boolean @default(false)
   onboardEmergContact  Boolean @default(false)
 
+  salaryStructureId String?
+  salaryStructure    SalaryStructure? @relation(fields: [salaryStructureId], references: [id])
+
   payslips        Payslip[]
   overtimeEntries OvertimeEntry[]
   leaveRequests   LeaveRequest[]
+  leaveBalances   LeaveBalance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -230,12 +234,13 @@ model Payslip {
 }
 
 model SalaryStructure {
-  id         String   @id @default(cuid())
+  id         String     @id @default(cuid())
   tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
   name       String
-  components Json     // Array of { name, type: "earning"|"deduction", calcType: "fixed"|"percentage", value }
-  createdAt  DateTime @default(now())
+  components Json       // Array of { name, type: "earning"|"deduction", calcType: "fixed"|"percentage", value }
+  employees  Employee[]
+  createdAt  DateTime   @default(now())
 
   @@index([tenantId])
 }
@@ -279,6 +284,22 @@ model LeaveRequest {
   createdAt  DateTime       @default(now())
 
   @@index([employeeId, status])
+}
+
+model LeaveBalance {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  type        LeaveType
+  year        Int       // e.g. 2026
+  entitled    Int       // total days entitled per year
+  used        Int       @default(0)
+  pending     Int       @default(0)
+  carried     Int       @default(0) // carried from previous year
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([employeeId, type, year])
+  @@index([employeeId])
 }
 
 model AuditLog {

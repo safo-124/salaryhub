@@ -34,7 +34,8 @@ export async function createDepartment(formData: FormData) {
         data: { tenantId, name, headId: (formData.get("headId") as string) || null },
     });
 
-    revalidatePath("/settings");
+    revalidatePath("/departments");
+    revalidatePath("/employees");
     return { success: true };
 }
 
@@ -51,7 +52,8 @@ export async function updateDepartment(id: string, formData: FormData) {
         data: { name, headId: (formData.get("headId") as string) || null },
     });
 
-    revalidatePath("/settings");
+    revalidatePath("/departments");
+    revalidatePath("/employees");
     return { success: true };
 }
 
@@ -67,6 +69,7 @@ export async function deleteDepartment(id: string) {
     });
 
     await prisma.department.delete({ where: { id } });
-    revalidatePath("/settings");
+    revalidatePath("/departments");
+    revalidatePath("/employees");
     return { success: true };
 }

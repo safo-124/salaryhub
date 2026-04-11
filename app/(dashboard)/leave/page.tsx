@@ -8,9 +8,11 @@ import {
 } from "@/components/ui/card";
 import { getLeaveRequests } from "@/lib/actions/leave";
 import { getEmployees } from "@/lib/actions/employees";
+import { getLeaveBalances } from "@/lib/actions/leave-balances";
 import { NewLeaveForm } from "./new-leave-form";
 import { LeaveTable } from "./leave-table";
 import { LeaveCalendar } from "./leave-calendar";
+import { LeaveBalanceTable } from "./leave-balance-table";
 import { ExportButton } from "@/components/export-button";
 import { exportLeaveCSV } from "@/lib/actions/export";
 
@@ -30,9 +32,10 @@ const typeColors: Record<string, string> = {
 };
 
 export default async function LeavePage() {
-    const [requests, employees] = await Promise.all([
+    const [requests, employees, balances] = await Promise.all([
         getLeaveRequests(),
         getEmployees(),
+        getLeaveBalances(),
     ]);
     const activeEmployees = employees.filter((e) => e.status === "ACTIVE");
 
@@ -54,6 +57,20 @@ export default async function LeavePage() {
             </div>
 
             {requests.length > 0 && <LeaveCalendar requests={requests} />}
+
+            {balances.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Leave Balances</CardTitle>
+                        <CardDescription>
+                            Entitlements and remaining days for {new Date().getFullYear()}.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <LeaveBalanceTable balances={balances} />
+                    </CardContent>
+                </Card>
+            )}
 
             <Card>
                 <CardHeader>

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireTenantSession } from "./tenant-session";
 import { EmployeeStatus, Role } from "@/lib/generated/prisma/client";
+import { initLeaveBalances } from "./leave-balances";
 
 // ─── Queries ─────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ export async function getEmployees() {
     const employees = await prisma.employee.findMany({
         where: { tenantId },
         orderBy: { createdAt: "desc" },
+        include: { departmentRel: true },
     });
     return employees.map((e) => ({
         id: e.id,
@@ -20,7 +22,7 @@ export async function getEmployees() {
         lastName: e.lastName,
         email: e.email,
         phone: e.phone,
-        department: e.department,
+        department: e.departmentRel?.name || e.department,
         jobTitle: e.jobTitle,
         role: e.role,
         basicSalary: Number(e.basicSalary),
@@ -38,6 +40,7 @@ export async function getEmployee(id: string) {
     const { tenantId } = await requireTenantSession();
     const e = await prisma.employee.findFirst({
         where: { id, tenantId },
+        include: { departmentRel: true },
     });
     if (!e) return null;
     return {
@@ -47,7 +50,8 @@ export async function getEmployee(id: string) {
         lastName: e.lastName,
         email: e.email,
         phone: e.phone,
-        department: e.department,
+        department: e.departmentRel?.name || e.department,
+        departmentId: e.departmentId,
         jobTitle: e.jobTitle,
         role: e.role,
         basicSalary: Number(e.basicSalary),
@@ -58,6 +62,7 @@ export async function getEmployee(id: string) {
         tin: e.tin,
         startDate: e.startDate.toISOString().split("T")[0],
         status: e.status,
+        salaryStructureId: e.salaryStructureId,
     };
 }
 
@@ -96,6 +101,7 @@ export async function createEmployee(formData: FormData) {
                 email: formData.get("email") as string,
                 phone: (formData.get("phone") as string) || null,
                 department: (formData.get("department") as string) || null,
+                departmentId: (formData.get("departmentId") as string) || null,
                 jobTitle: (formData.get("jobTitle") as string) || null,
                 role: ((formData.get("role") as string) || "EMPLOYEE") as Role,
                 basicSalary: parseFloat(formData.get("basicSalary") as string) || 0,
@@ -105,8 +111,13 @@ export async function createEmployee(formData: FormData) {
                 ssnit: (formData.get("ssnit") as string) || null,
                 tin: (formData.get("tin") as string) || null,
                 startDate: new Date(formData.get("startDate") as string),
+                salaryStructureId: (formData.get("salaryStructureId") as string) || null,
             },
         });
+
+        // Initialize leave balances for the new employee
+        await initLeaveBalances(employee.id);
+
         revalidatePath("/employees");
         return { success: true, id: employee.id };
     } catch (err: unknown) {
@@ -135,6 +146,7 @@ export async function updateEmployee(id: string, formData: FormData) {
                 email: formData.get("email") as string,
                 phone: (formData.get("phone") as string) || null,
                 department: (formData.get("department") as string) || null,
+                departmentId: (formData.get("departmentId") as string) || null,
                 jobTitle: (formData.get("jobTitle") as string) || null,
                 role: ((formData.get("role") as string) || existing.role) as Role,
                 basicSalary: parseFloat(formData.get("basicSalary") as string) || Number(existing.basicSalary),
@@ -146,6 +158,7 @@ export async function updateEmployee(id: string, formData: FormData) {
                 startDate: formData.get("startDate")
                     ? new Date(formData.get("startDate") as string)
                     : existing.startDate,
+                salaryStructureId: (formData.get("salaryStructureId") as string) || null,
             },
         });
         revalidatePath("/employees");

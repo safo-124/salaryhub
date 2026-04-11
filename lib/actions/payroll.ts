@@ -162,9 +162,10 @@ export async function runPayroll(formData: FormData) {
         return { success: false, error: `Payroll for ${period} already exists` };
     }
 
-    // Get all active employees for this tenant
+    // Get all active employees for this tenant (include salary structure)
     const employees = await prisma.employee.findMany({
         where: { tenantId, status: "ACTIVE" },
+        include: { salaryStructure: true },
     });
 
     if (employees.length === 0) {
@@ -212,11 +213,30 @@ export async function runPayroll(formData: FormData) {
             new Decimal(0)
         );
 
+        // Apply salary structure components if assigned
+        let structureAllowances = new Decimal(0);
+        let structureDeductions = new Decimal(0);
+        const basicSalary = new Decimal(String(emp.basicSalary));
+
+        if (emp.salaryStructure) {
+            const components = emp.salaryStructure.components as { name: string; type: "earning" | "deduction"; calcType: "fixed" | "percentage"; value: number }[];
+            for (const comp of components) {
+                const amount = comp.calcType === "percentage"
+                    ? basicSalary.times(comp.value).div(100)
+                    : new Decimal(comp.value);
+                if (comp.type === "earning") {
+                    structureAllowances = structureAllowances.plus(amount);
+                } else {
+                    structureDeductions = structureDeductions.plus(amount);
+                }
+            }
+        }
+
         const result: PayslipResult = calculatePayslip({
-            basicSalary: new Decimal(String(emp.basicSalary)),
-            allowances: new Decimal(String(emp.allowances)),
+            basicSalary,
+            allowances: new Decimal(String(emp.allowances)).plus(structureAllowances),
             overtime: overtimeAmount,
-            otherDeductions: new Decimal(0),
+            otherDeductions: structureDeductions,
         });
 
         payslipData.push({

@@ -48,7 +48,7 @@ export default async function PayslipDetailPage({
                         </p>
                     </div>
                 </div>
-                <Button variant="outline" disabled>
+                <Button variant="outline" nativeButton={false} render={<a href={`/api/payslips/${id}/pdf`} download />}>
                     <Download className="mr-2 size-4" />
                     Download PDF
                 </Button>
