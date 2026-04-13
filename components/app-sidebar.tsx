@@ -17,6 +17,7 @@ import {
     Bell,
     ClipboardList,
     Building2,
+    BarChart3,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -59,6 +60,7 @@ const allNavItems = [
     { title: "Departments", href: "/departments", icon: Building2, permission: "canManageEmployees" as const },
     { title: "Payroll", href: "/payroll", icon: DollarSign, permission: "canRunPayroll" as const },
     { title: "Payslips", href: "/payslips", icon: FileText, minRole: null },
+    { title: "Reports", href: "/reports", icon: BarChart3, permission: "canRunPayroll" as const },
     { title: "Leave", href: "/leave", icon: CalendarDays, minRole: null },
     { title: "Overtime", href: "/overtime", icon: Clock, minRole: null },
     { title: "Notifications", href: "/notifications", icon: Bell, minRole: null },

@@ -23,6 +23,7 @@ import { ExportButton } from "@/components/export-button";
 import { exportEmployeesCSV } from "@/lib/actions/export";
 import { EmployeeViewToggle } from "./employee-view-toggle";
 import { StatusToggle } from "./status-toggle";
+import { ImportEmployeesDialog } from "./import-employees-dialog";
 
 const roleColors: Record<string, string> = {
     OWNER: "bg-primary/10 text-primary",
@@ -73,6 +74,7 @@ export default async function EmployeesPage({
                     </p>
                 </div>
                 <div className="flex gap-2">
+                    <ImportEmployeesDialog />
                     <ExportButton exportFn={exportEmployeesCSV} filename="employees.csv" label="Export" />
                     <Button render={<Link href="/employees/new" />}>
                         <Plus className="mr-2 size-4" />
