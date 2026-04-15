@@ -175,7 +175,7 @@ model Employee {
   // Termination / Offboarding
   terminationDate   DateTime?
   terminationReason String?
-  finalPayProcessed Boolean @default(false)
+  finalPayProcessed Boolean   @default(false)
 
   supervisorId String?
   supervisor   Employee?  @relation("Supervision", fields: [supervisorId], references: [id])
@@ -448,19 +448,19 @@ model ApprovalChain {
 }
 
 model ApprovalRecord {
-  id         String   @id @default(cuid())
-  tenantId   String
-  category   String // "LEAVE" | "OVERTIME"
-  requestId  String // LeaveRequest.id or OvertimeEntry.id
-  stepOrder  Int
-  stepRole   String // role required
-  stepLabel  String
-  action     String // "APPROVED" | "REJECTED" | "PENDING"
-  actorId    String?
-  actorName  String?
-  comment    String?
-  actedAt    DateTime?
-  createdAt  DateTime @default(now())
+  id        String    @id @default(cuid())
+  tenantId  String
+  category  String // "LEAVE" | "OVERTIME"
+  requestId String // LeaveRequest.id or OvertimeEntry.id
+  stepOrder Int
+  stepRole  String // role required
+  stepLabel String
+  action    String // "APPROVED" | "REJECTED" | "PENDING"
+  actorId   String?
+  actorName String?
+  comment   String?
+  actedAt   DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([requestId])
   @@index([tenantId, category])
