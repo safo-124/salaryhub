@@ -152,7 +152,7 @@ function ChainEditor({
                         <Label className="text-xs">Role Required</Label>
                         <Select
                             value={step.role}
-                            onValueChange={(v) => updateStep(step.order, "role", v)}
+                            onValueChange={(v) => v && updateStep(step.order, "role", v)}
                         >
                             <SelectTrigger>
                                 <SelectValue />

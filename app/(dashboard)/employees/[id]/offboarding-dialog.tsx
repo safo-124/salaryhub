@@ -20,8 +20,16 @@ import { toast } from "sonner";
 import {
     calculateFinalPay,
     processOffboarding,
-    getClearanceItems,
 } from "@/lib/actions/offboarding";
+
+const CLEARANCE_ITEMS = [
+    { key: "company_property", label: "Company property returned (laptop, keys, ID card)" },
+    { key: "knowledge_transfer", label: "Knowledge transfer completed" },
+    { key: "access_revoked", label: "System access revoked" },
+    { key: "final_pay_calculated", label: "Final pay calculated" },
+    { key: "exit_interview", label: "Exit interview conducted" },
+    { key: "documents_signed", label: "Separation documents signed" },
+];
 
 function fmtGHS(n: number) {
     return `GHS ${n.toLocaleString("en-GH", { minimumFractionDigits: 2 })}`;
@@ -61,8 +69,7 @@ export function OffboardingDialog({
     const [loading, setLoading] = useState(false);
     const [calculating, setCalculating] = useState(false);
 
-    const clearanceItems = getClearanceItems();
-    const allCleared = clearanceItems.every((item) => clearance[item.key]);
+    const allCleared = CLEARANCE_ITEMS.every((item) => clearance[item.key]);
 
     async function handleCalculate() {
         setCalculating(true);
@@ -183,7 +190,7 @@ export function OffboardingDialog({
                     <div className="space-y-3">
                         <h3 className="font-medium">Clearance Checklist</h3>
                         <div className="space-y-2">
-                            {clearanceItems.map((item) => (
+                            {CLEARANCE_ITEMS.map((item) => (
                                 <label
                                     key={item.key}
                                     className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50"

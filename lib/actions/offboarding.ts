@@ -17,10 +17,6 @@ const CLEARANCE_ITEMS = [
     { key: "documents_signed", label: "Separation documents signed" },
 ];
 
-export function getClearanceItems() {
-    return CLEARANCE_ITEMS;
-}
-
 /**
  * Calculate final pay for a departing employee.
  * Includes prorated salary for the month + unused annual leave payout.
