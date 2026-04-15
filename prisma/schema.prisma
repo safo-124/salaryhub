@@ -95,6 +95,20 @@ enum NotificationType {
   GENERAL
 }
 
+enum DocumentType {
+  CONTRACT
+  ID_DOCUMENT
+  TAX_FORM
+  OFFER_LETTER
+  CERTIFICATION
+  OTHER
+}
+
+enum ApprovalCategory {
+  LEAVE
+  OVERTIME
+}
+
 // ─── Models ──────────────────────────────────────────────
 
 model Admin {
@@ -158,6 +172,11 @@ model Employee {
   status       EmployeeStatus @default(ACTIVE)
   passwordHash String? // for web/API login
 
+  // Termination / Offboarding
+  terminationDate   DateTime?
+  terminationReason String?
+  finalPayProcessed Boolean @default(false)
+
   supervisorId String?
   supervisor   Employee?  @relation("Supervision", fields: [supervisorId], references: [id])
   subordinates Employee[] @relation("Supervision")
@@ -180,6 +199,7 @@ model Employee {
   overtimeEntries OvertimeEntry[]
   leaveRequests   LeaveRequest[]
   leaveBalances   LeaveBalance[]
+  documents       Document[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -394,4 +414,54 @@ model Notification {
 
   @@index([tenantId, isRead])
   @@index([recipientId])
+}
+
+model Document {
+  id         String       @id @default(cuid())
+  tenantId   String
+  employeeId String
+  employee   Employee     @relation(fields: [employeeId], references: [id])
+  name       String // display name
+  type       DocumentType @default(OTHER)
+  fileName   String // original file name
+  fileType   String // mime type
+  fileSize   Int // bytes
+  fileData   Bytes // binary content
+  uploadedBy String // user name who uploaded
+  createdAt  DateTime     @default(now())
+
+  @@index([employeeId])
+  @@index([tenantId])
+}
+
+model ApprovalChain {
+  id        String           @id @default(cuid())
+  tenantId  String
+  category  ApprovalCategory
+  steps     Json // Array of { order: number, role: Role, label: string }
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([tenantId, category])
+  @@index([tenantId])
+}
+
+model ApprovalRecord {
+  id         String   @id @default(cuid())
+  tenantId   String
+  category   String // "LEAVE" | "OVERTIME"
+  requestId  String // LeaveRequest.id or OvertimeEntry.id
+  stepOrder  Int
+  stepRole   String // role required
+  stepLabel  String
+  action     String // "APPROVED" | "REJECTED" | "PENDING"
+  actorId    String?
+  actorName  String?
+  comment    String?
+  actedAt    DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([requestId])
+  @@index([tenantId, category])
 }

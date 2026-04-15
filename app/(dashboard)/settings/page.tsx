@@ -13,7 +13,9 @@ import { getDepartments } from "@/lib/actions/departments";
 import { getEmployees } from "@/lib/actions/employees";
 import { DepartmentManager } from "./departments";
 import { getSalaryStructures } from "@/lib/actions/salary-structures";
+import { getApprovalChains } from "@/lib/actions/approval-chains";
 import { SalaryStructureManager } from "./salary-structures";
+import { ApprovalChainsManager } from "./approval-chains";
 
 const planColors: Record<string, string> = {
     STARTER: "bg-muted text-muted-foreground",
@@ -22,11 +24,12 @@ const planColors: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-    const [settings, departments, employees, salaryStructures] = await Promise.all([
+    const [settings, departments, employees, salaryStructures, approvalChains] = await Promise.all([
         getTenantSettings(),
         getDepartments(),
         getEmployees(),
         getSalaryStructures(),
+        getApprovalChains(),
     ]);
 
     return (
@@ -89,6 +92,8 @@ export default async function SettingsPage() {
             <DepartmentManager departments={departments} employees={employees} />
 
             <SalaryStructureManager structures={salaryStructures} />
+
+            <ApprovalChainsManager chains={approvalChains} />
         </div>
     );
 }

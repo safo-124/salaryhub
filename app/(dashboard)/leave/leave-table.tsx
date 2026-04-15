@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { CheckCircle, XCircle } from "lucide-react";
 import { bulkApproveLeave, bulkRejectLeave, approveLeaveRequest, rejectLeaveRequest } from "@/lib/actions/leave";
+import { ApprovalStatusButton } from "@/components/approval-status-button";
 import { toast } from "sonner";
 
 type LeaveRequest = {
@@ -160,16 +161,19 @@ export function LeaveTable({ requests }: { requests: LeaveRequest[] }) {
                                 <Badge variant="secondary" className={statusColors[req.status] || ""}>{req.status}</Badge>
                             </TableCell>
                             <TableCell>
-                                {req.status === "PENDING" && (
-                                    <div className="flex gap-1">
-                                        <Button size="sm" variant="ghost" onClick={() => handleApprove(req.id)}>
-                                            <CheckCircle className="size-4 text-green-600" />
-                                        </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => handleReject(req.id)}>
-                                            <XCircle className="size-4 text-red-600" />
-                                        </Button>
-                                    </div>
-                                )}
+                                <div className="flex gap-1">
+                                    <ApprovalStatusButton requestId={req.id} />
+                                    {req.status === "PENDING" && (
+                                        <>
+                                            <Button size="sm" variant="ghost" onClick={() => handleApprove(req.id)}>
+                                                <CheckCircle className="size-4 text-green-600" />
+                                            </Button>
+                                            <Button size="sm" variant="ghost" onClick={() => handleReject(req.id)}>
+                                                <XCircle className="size-4 text-red-600" />
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
                             </TableCell>
                         </TableRow>
                     ))}

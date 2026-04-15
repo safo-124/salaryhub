@@ -12,7 +12,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { getEmployee, getEmployeeOnboarding } from "@/lib/actions/employees";
+import { getEmployeeDocuments } from "@/lib/actions/documents";
 import { OnboardingChecklist } from "./onboarding-checklist";
+import { DocumentManager } from "./document-manager";
+import { OffboardingDialog } from "./offboarding-dialog";
 
 export default async function EmployeeDetailPage({
     params,
@@ -20,9 +23,10 @@ export default async function EmployeeDetailPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const [employee, onboarding] = await Promise.all([
+    const [employee, onboarding, documents] = await Promise.all([
         getEmployee(id),
         getEmployeeOnboarding(id),
+        getEmployeeDocuments(id),
     ]);
 
     if (!employee) notFound();
@@ -58,10 +62,17 @@ export default async function EmployeeDetailPage({
                         </p>
                     </div>
                 </div>
-                <Button render={<Link href={`/employees/${id}/edit`} />}>
-                    <Pencil className="mr-2 size-4" />
-                    Edit
-                </Button>
+                <div className="flex gap-2">
+                    <OffboardingDialog
+                        employeeId={id}
+                        employeeName={`${employee.firstName} ${employee.lastName}`}
+                        status={employee.status}
+                    />
+                    <Button render={<Link href={`/employees/${id}/edit`} />}>
+                        <Pencil className="mr-2 size-4" />
+                        Edit
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -104,6 +115,8 @@ export default async function EmployeeDetailPage({
             </div>
 
             {onboarding && <OnboardingChecklist onboarding={onboarding} />}
+
+            <DocumentManager employeeId={id} documents={documents} />
         </div>
     );
 }

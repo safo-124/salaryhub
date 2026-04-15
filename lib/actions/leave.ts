@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireTenantSession } from "./tenant-session";
 import { LeaveType, ApprovalStatus } from "@/lib/generated/prisma/client";
 import { addPendingLeave, deductLeaveBalance, removePendingLeave } from "./leave-balances";
+import { initApprovalRecords } from "./approval-chains";
 
 export async function getLeaveRequests() {
     const { tenantId } = await requireTenantSession();
@@ -52,9 +53,12 @@ export async function createLeaveRequest(formData: FormData) {
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     ) + 1;
 
-    await prisma.leaveRequest.create({
+    const leaveRequest = await prisma.leaveRequest.create({
         data: { employeeId, type, startDate, endDate, days, reason },
     });
+
+    // Initialize approval chain if configured
+    await initApprovalRecords("LEAVE", leaveRequest.id);
 
     // Track pending in leave balance
     const year = startDate.getFullYear();
